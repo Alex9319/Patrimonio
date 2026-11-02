@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Patrimonio Dinámico</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans antialiased min-h-screen p-4 sm:p-6">
+    <div class="max-w-5xl mx-auto space-y-6">
+        
+        <!-- Header -->
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+            <div>
+                <h1 class="text-2xl font-bold text-emerald-400">Rumbo a tu Patrimonio</h1>
+                <p class="text-sm text-gray-400">Control mensual con grupos y subgrupos personalizados</p>
+            </div>
+            <div class="mt-4 sm:mt-0 flex gap-2">
+                <button onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Exportar JSON</button>
+                <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition">
+                    Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
+        </header>
+
+        <!-- Tarjetas Resumen -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                <p class="text-sm text-gray-400">Patrimonio Total</p>
+                <p id="totalPatrimonio" class="text-3xl font-extrabold text-white mt-1">0,00 €</p>
+            </div>
+            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                <p class="text-sm text-gray-400">Último Incremento Mensual</p>
+                <p id="ultimoIncremento" class="text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
+            </div>
+            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                <p class="text-sm text-gray-400">Crecimiento Anual Acumulado</p>
+                <p id="crecimientoAnual" class="text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
+            </div>
+        </div>
+
+        <!-- Gráfica -->
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
+            <h2 class="text-lg font-semibold mb-4 text-gray-200">Evolución del Patrimonio</h2>
+            <div class="relative h-72">
+                <canvas id="patrimonioChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Configuración de Subgrupos -->
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
+            <h2 class="text-lg font-semibold mb-2 text-gray-200">Configuración de Grupos y Subgrupos</h2>
+            <p class="text-xs text-gray-400 mb-4">Si el nombre incluye "tarjeta" o "deuda", se restará automáticamente del total.</p>
+            
+            <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4">
+                <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo)" required class="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Cobro Tarjeta)" required class="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">Añadir Subgrupo</button>
+            </form>
+
+            <div id="subgroupsList" class="flex flex-wrap gap-2">
+                <!-- Dinámico -->
+            </div>
+        </div>
+
+        <!-- Formulario de Entrada / Edición de Datos Mensuales -->
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow" id="formContainer">
+            <div class="flex justify-between items-center mb-4">
+                <h2 id="formTitle" class="text-lg font-semibold text-gray-200">Añadir / Actualizar Registro Mensual</h2>
+                <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-xl text-xs font-medium transition">Cancelar Edición</button>
+            </div>
+            
+            <form id="patrimonioForm" onsubmit="saveRecord(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs text-gray-400 mb-1">Fecha / Mes</label>
+                    <input type="date" id="fecha" required class="w-full sm:w-1/3 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                </div>
+                
+                <div id="subgroupsInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <!-- Dinámico según configuración -->
+                </div>
+
+                <div class="flex justify-end pt-2">
+                    <button type="submit" id="submitBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">Guardar Registro Mensual</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Historial de Registros -->
+        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow overflow-x-auto">
+            <h2 class="text-lg font-semibold mb-4 text-gray-200">Historial de Registros</h2>
+            <table class="w-full text-left text-sm text-gray-300">
+                <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+                    <tr>
+                        <th class="p-3">Fecha</th>
+                        <th class="p-3">Detalle por Grupos</th>
+                        <th class="p-3">Total</th>
+                        <th class="p-3">Incremento</th>
+                        <th class="p-3 text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody id="dataTableBody" class="divide-y divide-gray-700">
+                    <!-- Dinámico -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <script>
+        let subgroups = JSON.parse(localStorage.getItem('patrimonio_subgroups')) || [
+            { id: 'rem1', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 1' },
+            { id: 'rem2', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 2' },
+            { id: 'diaria', grupo: 'Efectivo', nombre: 'Cuenta Diaria / Efectivo' },
+            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta' },
+            { id: 'fondos', grupo: 'Inversiones', nombre: 'Fondos Indexados' },
+            { id: 'criptos', grupo: 'Inversiones', nombre: 'Criptomonedas' },
+            { id: 'pias', grupo: 'Inversiones', nombre: 'PIAS' }
+        ];
+
+        let records = JSON.parse(localStorage.getItem('patrimonio_records')) || [];
+        let chartInstance = null;
+        let editingIndex = null;
+
+        function renderSubgroupsConfig() {
+            const listContainer = document.getElementById('subgroupsList');
+            const inputsContainer = document.getElementById('subgroupsInputs');
+            
+            listContainer.innerHTML = '';
+            inputsContainer.innerHTML = '';
+
+            subgroups.forEach((sub, index) => {
+                const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
+                const badge = document.createElement('div');
+                badge.className = "bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2";
+                badge.innerHTML = `<span class="text-emerald-400 font-semibold">${sub.grupo}:</span> <span>${sub.nombre}</span> ${isSustractor ? '<span class="text-rose-400 text-[10px] bg-rose-950 px-1.5 py-0.5 rounded">Resta</span>' : ''} <button type="button" onclick="deleteSubgroup(${index})" class="text-rose-400 hover:text-rose-300 ml-1 font-bold">×</button>`;
+                listContainer.appendChild(badge);
+
+                const inputDiv = document.createElement('div');
+                inputDiv.innerHTML = `
+                    <label class="block text-xs text-gray-400 mb-1"><span class="text-emerald-400">${sub.grupo}</span> / ${sub.nombre} ${isSustractor ? '(se resta)' : ''}</label>
+                    <input type="number" step="any" id="val_${sub.id}" value="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm sub-input">
+                `;
+                inputsContainer.appendChild(inputDiv);
+            });
+        }
+
+        function addSubgroup(e) {
+            e.preventDefault();
+            const grupo = document.getElementById('newGroup').value.trim();
+            const nombre = document.getElementById('newSubgroup').value.trim();
+            const id = 'sub_' + Math.random().toString(36).substr(2, 9);
+
+            subgroups.push({ id, grupo, nombre });
+            localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
+            
+            document.getElementById('newGroup').value = '';
+            document.getElementById('newSubgroup').value = '';
+            renderSubgroupsConfig();
+        }
+
+        function deleteSubgroup(index) {
+            if (confirm('¿Eliminar este subgrupo? Se dejará de contemplar en los nuevos registros.')) {
+                subgroups.splice(index, 1);
+                localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
+                renderSubgroupsConfig();
+            }
+        }
+
+        function calculateTotals(r) {
+            let total = 0;
+            if (r.valores) {
+                subgroups.forEach(sub => {
+                    const val = parseFloat(r.valores[sub.id] || 0);
+                    const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
+                    if (isSustractor) {
+                        total -= val;
+                    } else {
+                        total += val;
+                    }
+                });
+            }
+            return total;
+        }
+
+        function updateApp() {
+            records.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
+            localStorage.setItem('patrimonio_records', JSON.stringify(records));
+
+            const tbody = document.getElementById('dataTableBody');
+            tbody.innerHTML = '';
+
+            let labels = [];
+            let dataTotales = [];
+            let prevTotal = null;
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay registros introducidos todavía.</td></tr>`;
+            }
+
+            records.forEach((r, index) => {
+                const total = calculateTotals(r);
+                const incremento = prevTotal !== null ? total - prevTotal : 0;
+                prevTotal = total;
+
+                labels.push(r.fecha);
+                dataTotales.push(total);
+
+                let detalleHtml = '<div class="text-xs space-y-0.5 text-gray-400">';
+                if (r.valores) {
+                    subgroups.forEach(sub => {
+                        const val = parseFloat(r.valores[sub.id] || 0);
+                        if (val !== 0) {
+                            const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
+                            const signo = isSustractor ? '- ' : '';
+                            const colorClass = isSustractor ? 'text-rose-400' : 'text-emerald-400';
+                            detalleHtml += `<div><span class="${colorClass}">${sub.grupo} > ${sub.nombre}:</span> ${signo}${val.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</div>`;
+                        }
+                    });
+                }
+                detalleHtml += '</div>';
+
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-750 transition border-b border-gray-700/50";
+                row.innerHTML = `
+                    <td class="p-3 font-medium align-top">${r.fecha}</td>
+                    <td class="p-3 align-top">${detalleHtml}</td>
+                    <td class="p-3 font-bold text-emerald-400 align-top">${total.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</td>
+                    <td class="p-3 align-top ${incremento >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${incremento !== 0 ? (incremento > 0 ? '+' : '') + incremento.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €' : '-'}</td>
+                    <td class="p-3 text-right align-top space-x-2">
+                        <button onclick="editRecord(${index})" class="text-amber-400 hover:text-amber-300 text-xs font-semibold px-2 py-1 bg-amber-900/40 rounded-lg">Editar</button>
+                        <button onclick="deleteRecord(${index})" class="text-rose-400 hover:text-rose-300 text-xs font-semibold px-2 py-1 bg-rose-900/40 rounded-lg">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            if (records.length > 0) {
+                const last = calculateTotals(records[records.length - 1]);
+                const secondLast = records.length > 1 ? calculateTotals(records[records.length - 2]) : last;
+                const ultimoInc = last - secondLast;
+                const inicioAnio = calculateTotals(records[0]);
+                const crecimientoAnual = last - inicioAnio;
+
+                document.getElementById('totalPatrimonio').innerText = last.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+                
+                const incEl = document.getElementById('ultimoIncremento');
+                incEl.innerText = (ultimoInc > 0 ? '+' : '') + ultimoInc.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+                incEl.className = `text-3xl font-extrabold mt-1 ${ultimoInc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+
+                document.getElementById('crecimientoAnual').innerText = (crecimientoAnual > 0 ? '+' : '') + crecimientoAnual.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+            } else {
+                document.getElementById('totalPatrimonio').innerText = '0,00 €';
+                document.getElementById('ultimoIncremento').innerText = '0,00 €';
+                document.getElementById('crecimientoAnual').innerText = '0,00 €';
+            }
+
+            updateChart(labels, dataTotales);
+        }
+
+        function updateChart(labels, data) {
+            const ctx = document.getElementById('patrimonioChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Patrimonio Total (€)',
+                        data: data,
+                        borderColor: '#34d399',
+                        backgroundColor: 'rgba(52, 211, 153, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
+                    }
+                }
+            });
+        }
+
+        function editRecord(index) {
+            editingIndex = index;
+            const r = records[index];
+
+            document.getElementById('fecha').value = r.fecha;
+            
+            subgroups.forEach(sub => {
+                const input = document.getElementById(`val_${sub.id}`);
+                if (input) {
+                    input.value = (r.valores && r.valores[sub.id] !== undefined) ? r.valores[sub.id] : 0;
+                }
+            });
+
+            document.getElementById('formTitle').innerText = `Editando Registro del ${r.fecha}`;
+            document.getElementById('submitBtn').innerText = 'Actualizar Registro';
+            document.getElementById('submitBtn').className = 'bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition';
+            document.getElementById('cancelEditBtn').classList.remove('hidden');
+
+            document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function cancelEdit() {
+            editingIndex = null;
+            document.getElementById('patrimonioForm').reset();
+            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+
+            subgroups.forEach(sub => {
+                const input = document.getElementById(`val_${sub.id}`);
+                if (input) input.value = 0;
+            });
+
+            document.getElementById('formTitle').innerText = 'Añadir / Actualizar Registro Mensual';
+            document.getElementById('submitBtn').innerText = 'Guardar Registro Mensual';
+            document.getElementById('submitBtn').className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition';
+            document.getElementById('cancelEditBtn').classList.add('hidden');
+        }
+
+        function saveRecord(e) {
+            e.preventDefault();
+            let valores = {};
+            subgroups.forEach(sub => {
+                const input = document.getElementById(`val_${sub.id}`);
+                valores[sub.id] = input ? parseFloat(input.value) || 0 : 0;
+            });
+
+            const fecha = document.getElementById('fecha').value;
+            
+            if (editingIndex !== null) {
+                records[editingIndex] = { fecha, valores };
+                editingIndex = null;
+            } else {
+                const existingIndex = records.findIndex(r => r.fecha === fecha);
+                if (existingIndex >= 0) {
+                    records[existingIndex].valores = valores;
+                } else {
+                    records.push({ fecha, valores });
+                }
+            }
+
+            cancelEdit();
+            updateApp();
+        }
+
+        function deleteRecord(index) {
+            if (confirm('¿Seguro que deseas eliminar este registro?')) {
+                if (editingIndex === index) cancelEdit();
+                records.splice(index, 1);
+                updateApp();
+            }
+        }
+
+        function exportData() {
+            const exportObj = { subgroups, records };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "patrimonio_config_backup.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (imported.subgroups && imported.records) {
+                        subgroups = imported.subgroups;
+                        records = imported.records;
+                        localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
+                        renderSubgroupsConfig();
+                        cancelEdit();
+                        updateApp();
+                        alert('Datos y configuración importados correctamente.');
+                    } else {
+                        alert('El formato del archivo no es válido.');
+                    }
+                } catch (err) {
+                    alert('Error al leer el archivo JSON.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+        renderSubgroupsConfig();
+        updateApp();
+    </script>
+</body>
+</html>
