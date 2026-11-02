@@ -14,7 +14,7 @@
         <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-400">Rumbo a tu Patrimonio</h1>
-                <p class="text-sm text-gray-400">Control mensual con grupos y subgrupos personalizados</p>
+                <p class="text-sm text-gray-400">Control mensual con selector de año y desglose personalizado</p>
             </div>
             <div class="mt-4 sm:mt-0 flex gap-2">
                 <button onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Exportar JSON</button>
@@ -34,29 +34,54 @@
                 <p class="text-sm text-gray-400">Último Incremento Mensual</p>
                 <p id="ultimoIncremento" class="text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
             </div>
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
-                <p class="text-sm text-gray-400">Crecimiento Anual Acumulado</p>
-                <p id="crecimientoAnual" class="text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
+            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center">
+                        <p class="text-sm text-gray-400">Crecimiento Anual</p>
+                        <select id="yearSelector" onchange="updateApp(true)" class="bg-gray-900 border border-gray-700 text-blue-400 text-xs rounded-lg px-2 py-1 outline-none">
+                            <!-- Dinámico -->
+                        </select>
+                    </div>
+                    <p id="crecimientoAnual" class="text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
+                </div>
             </div>
         </div>
 
-        <!-- Gráfica -->
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
-            <h2 class="text-lg font-semibold mb-4 text-gray-200">Evolución del Patrimonio</h2>
-            <div class="relative h-72">
-                <canvas id="patrimonioChart"></canvas>
+        <!-- Seccion de Graficas -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Gráfica 1: Evolución Temporal -->
+            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
+                <h2 class="text-lg font-semibold mb-4 text-gray-200">Evolución del Patrimonio</h2>
+                <div class="relative h-72">
+                    <canvas id="patrimonioChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Gráfica 2: Distribución de Activos Positivos (Doughnut) -->
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold mb-1 text-gray-200">Distribución del Dinero</h2>
+                    <p class="text-xs text-gray-400 mb-4">Excluye pasivos / deudas. Muestra dónde está repartido tu capital positivo.</p>
+                </div>
+                <div class="relative h-60 flex items-center justify-center">
+                    <canvas id="distribucionChart"></canvas>
+                </div>
             </div>
         </div>
 
         <!-- Configuración de Subgrupos -->
         <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
             <h2 class="text-lg font-semibold mb-2 text-gray-200">Configuración de Grupos y Subgrupos</h2>
-            <p class="text-xs text-gray-400 mb-4">Si el nombre incluye "tarjeta" o "deuda", se restará automáticamente del total.</p>
+            <p class="text-xs text-gray-400 mb-4">Añade categorías y especifica expresamente si suman a tu patrimonio (Activo) o restan (Pasivo/Deuda).</p>
             
-            <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4">
-                <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo)" required class="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Cobro Tarjeta)" required class="flex-1 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition">Añadir Subgrupo</button>
+            <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+                <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo, Inversiones)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Préstamo, Indexados)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                <select id="newType" class="w-full sm:w-auto bg-gray-900 border border-gray-700 text-white text-sm rounded-xl p-2.5 outline-none">
+                    <option value="positivo">Activo (+ Suma)</option>
+                    <option value="negativo">Pasivo (- Resta)</option>
+                </select>
+                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap">Añadir Subgrupo</button>
             </form>
 
             <div id="subgroupsList" class="flex flex-wrap gap-2">
@@ -110,18 +135,27 @@
 
     <script>
         let subgroups = JSON.parse(localStorage.getItem('patrimonio_subgroups')) || [
-            { id: 'rem1', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 1' },
-            { id: 'rem2', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 2' },
-            { id: 'diaria', grupo: 'Efectivo', nombre: 'Cuenta Diaria / Efectivo' },
-            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta' },
-            { id: 'fondos', grupo: 'Inversiones', nombre: 'Fondos Indexados' },
-            { id: 'criptos', grupo: 'Inversiones', nombre: 'Criptomonedas' },
-            { id: 'pias', grupo: 'Inversiones', nombre: 'PIAS' }
+            { id: 'rem1', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 1', tipo: 'positivo' },
+            { id: 'rem2', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 2', tipo: 'positivo' },
+            { id: 'diaria', grupo: 'Efectivo', nombre: 'Cuenta Diaria / Efectivo', tipo: 'positivo' },
+            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta', tipo: 'negativo' },
+            { id: 'fondos', grupo: 'Inversiones', nombre: 'Fondos Indexados', tipo: 'positivo' },
+            { id: 'criptos', grupo: 'Inversiones', nombre: 'Criptomonedas', tipo: 'positivo' },
+            { id: 'pias', grupo: 'Inversiones', nombre: 'PIAS', tipo: 'positivo' }
         ];
 
         let records = JSON.parse(localStorage.getItem('patrimonio_records')) || [];
         let chartInstance = null;
+        let distribucionChartInstance = null;
         let editingIndex = null;
+
+        function isSustractor(sub) {
+            if (sub.tipo) {
+                return sub.tipo === 'negativo';
+            }
+            // Compatibilidad hacia atrás si no tenía el campo 'tipo'
+            return sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
+        }
 
         function renderSubgroupsConfig() {
             const listContainer = document.getElementById('subgroupsList');
@@ -131,15 +165,15 @@
             inputsContainer.innerHTML = '';
 
             subgroups.forEach((sub, index) => {
-                const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
+                const sustractor = isSustractor(sub);
                 const badge = document.createElement('div');
                 badge.className = "bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2";
-                badge.innerHTML = `<span class="text-emerald-400 font-semibold">${sub.grupo}:</span> <span>${sub.nombre}</span> ${isSustractor ? '<span class="text-rose-400 text-[10px] bg-rose-950 px-1.5 py-0.5 rounded">Resta</span>' : ''} <button type="button" onclick="deleteSubgroup(${index})" class="text-rose-400 hover:text-rose-300 ml-1 font-bold">×</button>`;
+                badge.innerHTML = `<span class="text-emerald-400 font-semibold">${sub.grupo}:</span> <span>${sub.nombre}</span> ${sustractor ? '<span class="text-rose-400 text-[10px] bg-rose-950 px-1.5 py-0.5 rounded font-medium">Pasivo (-)</span>' : '<span class="text-emerald-400 text-[10px] bg-emerald-950 px-1.5 py-0.5 rounded font-medium">Activo (+)</span>'} <button type="button" onclick="deleteSubgroup(${index})" class="text-rose-400 hover:text-rose-300 ml-1 font-bold">×</button>`;
                 listContainer.appendChild(badge);
 
                 const inputDiv = document.createElement('div');
                 inputDiv.innerHTML = `
-                    <label class="block text-xs text-gray-400 mb-1"><span class="text-emerald-400">${sub.grupo}</span> / ${sub.nombre} ${isSustractor ? '(se resta)' : ''}</label>
+                    <label class="block text-xs text-gray-400 mb-1"><span class="text-emerald-400">${sub.grupo}</span> / ${sub.nombre} ${sustractor ? '<span class="text-rose-400">(se resta)</span>' : ''}</label>
                     <input type="number" step="any" id="val_${sub.id}" value="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm sub-input">
                 `;
                 inputsContainer.appendChild(inputDiv);
@@ -150,14 +184,16 @@
             e.preventDefault();
             const grupo = document.getElementById('newGroup').value.trim();
             const nombre = document.getElementById('newSubgroup').value.trim();
+            const tipo = document.getElementById('newType').value;
             const id = 'sub_' + Math.random().toString(36).substr(2, 9);
 
-            subgroups.push({ id, grupo, nombre });
+            subgroups.push({ id, grupo, nombre, tipo });
             localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
             
             document.getElementById('newGroup').value = '';
             document.getElementById('newSubgroup').value = '';
             renderSubgroupsConfig();
+            updateApp();
         }
 
         function deleteSubgroup(index) {
@@ -165,6 +201,7 @@
                 subgroups.splice(index, 1);
                 localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
                 renderSubgroupsConfig();
+                updateApp();
             }
         }
 
@@ -173,8 +210,7 @@
             if (r.valores) {
                 subgroups.forEach(sub => {
                     const val = parseFloat(r.valores[sub.id] || 0);
-                    const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
-                    if (isSustractor) {
+                    if (isSustractor(sub)) {
                         total -= val;
                     } else {
                         total += val;
@@ -184,9 +220,46 @@
             return total;
         }
 
-        function updateApp() {
+        function updateYearSelector(years, userChangedManual) {
+            const select = document.getElementById('yearSelector');
+            const currentYearStr = new Date().getFullYear().toString();
+            
+            let selectedVal = userChangedManual ? select.value : currentYearStr;
+            select.innerHTML = '';
+
+            years.forEach(year => {
+                const opt = document.createElement('option');
+                opt.value = year;
+                opt.innerText = `Desde inicio ${year}`;
+                select.appendChild(opt);
+            });
+
+            if (years.includes(selectedVal)) {
+                select.value = selectedVal;
+            } else if (years.length > 0) {
+                select.value = years[years.length - 1];
+            }
+        }
+
+        function updateApp(userChangedManual = false) {
             records.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             localStorage.setItem('patrimonio_records', JSON.stringify(records));
+
+            const yearsSet = new Set();
+            records.forEach(r => {
+                const y = r.fecha.split('-')[0];
+                yearsSet.add(y);
+            });
+            let years = Array.from(yearsSet).sort();
+            
+            const currentYearStr = new Date().getFullYear().toString();
+            if (!yearsSet.has(currentYearStr)) {
+                years.push(currentYearStr);
+                years.sort();
+            }
+
+            updateYearSelector(years, userChangedManual);
+            const selectedYear = document.getElementById('yearSelector').value || currentYearStr;
 
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
@@ -212,9 +285,9 @@
                     subgroups.forEach(sub => {
                         const val = parseFloat(r.valores[sub.id] || 0);
                         if (val !== 0) {
-                            const isSustractor = sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
-                            const signo = isSustractor ? '- ' : '';
-                            const colorClass = isSustractor ? 'text-rose-400' : 'text-emerald-400';
+                            const sustractor = isSustractor(sub);
+                            const signo = sustractor ? '- ' : '';
+                            const colorClass = sustractor ? 'text-rose-400' : 'text-emerald-400';
                             detalleHtml += `<div><span class="${colorClass}">${sub.grupo} > ${sub.nombre}:</span> ${signo}${val.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</div>`;
                         }
                     });
@@ -240,8 +313,6 @@
                 const last = calculateTotals(records[records.length - 1]);
                 const secondLast = records.length > 1 ? calculateTotals(records[records.length - 2]) : last;
                 const ultimoInc = last - secondLast;
-                const inicioAnio = calculateTotals(records[0]);
-                const crecimientoAnual = last - inicioAnio;
 
                 document.getElementById('totalPatrimonio').innerText = last.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
                 
@@ -249,7 +320,23 @@
                 incEl.innerText = (ultimoInc > 0 ? '+' : '') + ultimoInc.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
                 incEl.className = `text-3xl font-extrabold mt-1 ${ultimoInc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-                document.getElementById('crecimientoAnual').innerText = (crecimientoAnual > 0 ? '+' : '') + crecimientoAnual.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+                let baseAnual = calculateTotals(records[0]);
+                const targetYearInt = parseInt(selectedYear);
+                const prevYearStr = (targetYearInt - 1).toString();
+                
+                const prevYearRecords = records.filter(r => r.fecha.startsWith(prevYearStr));
+                if (prevYearRecords.length > 0) {
+                    baseAnual = calculateTotals(prevYearRecords[prevYearRecords.length - 1]);
+                } else {
+                    const currentYearRecord = records.find(r => r.fecha.startsWith(selectedYear));
+                    if (currentYearRecord) {
+                        baseAnual = calculateTotals(currentYearRecord);
+                    }
+                }
+
+                const crecimientoAnual = last - baseAnual;
+                const anuEl = document.getElementById('crecimientoAnual');
+                anuEl.innerText = (crecimientoAnual > 0 ? '+' : '') + crecimientoAnual.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
             } else {
                 document.getElementById('totalPatrimonio').innerText = '0,00 €';
                 document.getElementById('ultimoIncremento').innerText = '0,00 €';
@@ -257,6 +344,7 @@
             }
 
             updateChart(labels, dataTotales);
+            updateDistribucionChart();
         }
 
         function updateChart(labels, data) {
@@ -285,6 +373,68 @@
                         x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
                         y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
                     }
+                }
+            });
+        }
+
+        function updateDistribucionChart() {
+            const ctx = document.getElementById('distribucionChart').getContext('2d');
+            if (distribucionChartInstance) distribucionChartInstance.destroy();
+
+            if (records.length === 0) return;
+
+            const lastRecord = records[records.length - 1];
+            let labels = [];
+            let data = [];
+            let colors = [
+                '#34d399', '#60a5fa', '#a78bfa', '#f472b6', 
+                '#fbbf24', '#38bdf8', '#818cf8', '#4ade80'
+            ];
+
+            // Agrupar únicamente subgrupos positivos (Activos)
+            subgroups.forEach((sub, i) => {
+                if (!isSustractor(sub)) {
+                    const val = parseFloat((lastRecord.valores && lastRecord.valores[sub.id]) || 0);
+                    if (val > 0) {
+                        labels.push(`${sub.grupo} - ${sub.nombre}`);
+                        data.push(val);
+                    }
+                }
+            });
+
+            distribucionChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 2,
+                        borderColor: '#1f2937'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                color: '#9ca3af',
+                                font: { size: 10 },
+                                boxWidth: 12
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const val = context.raw || 0;
+                                    return ` ${val.toLocaleString('es-ES', {minimumFractionDigits: 2})} €`;
+                                }
+                            }
+                        }
+                    },
+                    cutout: '65%'
                 }
             });
         }
