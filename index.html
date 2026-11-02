@@ -26,16 +26,6 @@
                     📝 Introducción de Datos
                 </button>
             </div>
-
-            <!-- Acciones de Backup -->
-            <div class="flex gap-2">
-                <button onclick="exportData()" class="bg-blue-600/80 hover:bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                    ⬇️ Exportar JSON
-                </button>
-                <label class="bg-emerald-600/80 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition flex items-center gap-1.5">
-                    ⬆️ Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
-                </label>
-            </div>
         </header>
 
         <!-- ================= PESTAÑA 1: DASHBOARD / PÁGINA PRINCIPAL ================= -->
@@ -96,6 +86,15 @@
 
         <!-- ================= PESTAÑA 2: INTRODUCCIÓN Y GESTIÓN DE DATOS ================= -->
         <div id="tabDatos" class="space-y-6 hidden">
+            <!-- Acciones de Backup -->
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="bg-blue-600/80 hover:bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    ⬇️ Exportar JSON
+                </button>
+                <label class="bg-emerald-600/80 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition flex items-center gap-1.5">
+                    ⬆️ Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+                </label>
+            </div>
             <!-- Formulario de Entrada / Edición de Datos Mensuales -->
             <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow" id="formContainer">
                 <div class="flex justify-between items-center mb-4">
