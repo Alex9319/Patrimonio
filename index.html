@@ -162,13 +162,8 @@
 
     <script>
         let subgroups = JSON.parse(localStorage.getItem('patrimonio_subgroups')) || [
-            { id: 'rem1', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 1', tipo: 'positivo' },
-            { id: 'rem2', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 2', tipo: 'positivo' },
             { id: 'diaria', grupo: 'Efectivo', nombre: 'Cuenta Diaria / Efectivo', tipo: 'positivo' },
-            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta', tipo: 'negativo' },
-            { id: 'fondos', grupo: 'Inversiones', nombre: 'Fondos Indexados', tipo: 'positivo' },
-            { id: 'criptos', grupo: 'Inversiones', nombre: 'Criptomonedas', tipo: 'positivo' },
-            { id: 'pias', grupo: 'Inversiones', nombre: 'PIAS', tipo: 'positivo' }
+            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta', tipo: 'negativo' }
         ];
 
         let records = JSON.parse(localStorage.getItem('patrimonio_records')) || [];
