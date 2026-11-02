@@ -10,125 +10,153 @@
 <body class="bg-gray-900 text-gray-100 font-sans antialiased min-h-screen p-4 sm:p-6">
     <div class="max-w-5xl mx-auto space-y-6">
         
-        <!-- Header -->
-        <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700">
+        <!-- Header con Navegación por Pestañas -->
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 gap-4">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-400">Rumbo a tu Patrimonio</h1>
-                <p class="text-sm text-gray-400">Control mensual con selector de año y desglose personalizado</p>
+                <p class="text-sm text-gray-400">Control de finanzas personales y patrimonio neto</p>
             </div>
-            <div class="mt-4 sm:mt-0 flex gap-2">
-                <button onclick="exportData()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">Exportar JSON</button>
-                <label class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-sm font-medium cursor-pointer transition">
-                    Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+            
+            <!-- Navegación de Pestañas -->
+            <div class="flex bg-gray-900 p-1.5 rounded-xl border border-gray-700/80">
+                <button id="tabDashboardBtn" onclick="switchTab('dashboard')" class="px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow">
+                    📊 Resumen & Gráficos
+                </button>
+                <button id="tabDatosBtn" onclick="switchTab('datos')" class="px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200">
+                    📝 Introducción de Datos
+                </button>
+            </div>
+
+            <!-- Acciones de Backup -->
+            <div class="flex gap-2">
+                <button onclick="exportData()" class="bg-blue-600/80 hover:bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    ⬇️ Exportar JSON
+                </button>
+                <label class="bg-emerald-600/80 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition flex items-center gap-1.5">
+                    ⬆️ Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
                 </label>
             </div>
         </header>
 
-        <!-- Tarjetas Resumen -->
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
-                <p class="text-sm text-gray-400">Patrimonio Total</p>
-                <p id="totalPatrimonio" class="text-3xl font-extrabold text-white mt-1">0,00 €</p>
+        <!-- ================= PESTAÑA 1: DASHBOARD / PÁGINA PRINCIPAL ================= -->
+        <div id="tabDashboard" class="space-y-6">
+            
+            <!-- Selector de Año Principal -->
+            <div class="bg-gray-800 p-4 rounded-2xl border border-gray-700 shadow flex flex-col sm:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">📅</span>
+                    <label for="yearSelector" class="text-sm font-medium text-gray-300">Filtrar vista por Año / Ejercicio:</label>
+                </div>
+                <select id="yearSelector" onchange="onYearChange()" class="w-full sm:w-auto bg-gray-900 border border-emerald-500/50 text-emerald-400 font-semibold text-sm rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-emerald-500">
+                    <!-- Dinámico -->
+                </select>
             </div>
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
-                <p class="text-sm text-gray-400">Último Incremento Mensual</p>
-                <p id="ultimoIncremento" class="text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
-            </div>
-            <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
-                <div>
-                    <div class="flex justify-between items-center">
-                        <p class="text-sm text-gray-400">Crecimiento Anual</p>
-                        <select id="yearSelector" onchange="updateApp(true)" class="bg-gray-900 border border-gray-700 text-blue-400 text-xs rounded-lg px-2 py-1 outline-none">
-                            <!-- Dinámico -->
-                        </select>
-                    </div>
+
+            <!-- Tarjetas Resumen -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                    <p class="text-sm text-gray-400">Patrimonio Total (al cierre del período)</p>
+                    <p id="totalPatrimonio" class="text-3xl font-extrabold text-white mt-1">0,00 €</p>
+                </div>
+                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                    <p class="text-sm text-gray-400">Último Incremento Mensual</p>
+                    <p id="ultimoIncremento" class="text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
+                </div>
+                <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
+                    <p class="text-sm text-gray-400">Crecimiento en el Año Seleccionado</p>
                     <p id="crecimientoAnual" class="text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
                 </div>
             </div>
-        </div>
 
-        <!-- Seccion de Graficas -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <!-- Gráfica 1: Evolución Temporal -->
-            <div class="lg:col-span-2 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-4 text-gray-200">Evolución del Patrimonio</h2>
-                <div class="relative h-72">
-                    <canvas id="patrimonioChart"></canvas>
+            <!-- Sección de Gráficas -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Gráfica 1: Evolución Temporal -->
+                <div class="lg:col-span-2 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-gray-200">Evolución del Patrimonio</h2>
+                        <span id="chartYearLabel" class="text-xs text-emerald-400 font-medium bg-emerald-950 border border-emerald-800 px-2.5 py-1 rounded-lg"></span>
+                    </div>
+                    <div class="relative h-72">
+                        <canvas id="patrimonioChart"></canvas>
+                    </div>
                 </div>
-            </div>
 
-            <!-- Gráfica 2: Distribución de Activos Positivos (Doughnut) -->
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
-                <div>
-                    <h2 class="text-lg font-semibold mb-1 text-gray-200">Distribución del Dinero</h2>
-                    <p class="text-xs text-gray-400 mb-4">Excluye pasivos / deudas. Muestra dónde está repartido tu capital positivo.</p>
+                <!-- Gráfica 2: Distribución de Activos Positivos (Doughnut) -->
+                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
+                    <div>
+                        <h2 class="text-lg font-semibold mb-1 text-gray-200">Distribución del Dinero</h2>
+                        <p class="text-xs text-gray-400 mb-4">Excluye pasivos / deudas. Basado en el último mes visible.</p>
+                    </div>
+                    <div class="relative h-60 flex items-center justify-center">
+                        <canvas id="distribucionChart"></canvas>
+                    </div>
                 </div>
-                <div class="relative h-60 flex items-center justify-center">
-                    <canvas id="distribucionChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Configuración de Subgrupos -->
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
-            <h2 class="text-lg font-semibold mb-2 text-gray-200">Configuración de Grupos y Subgrupos</h2>
-            <p class="text-xs text-gray-400 mb-4">Añade categorías y especifica expresamente si suman a tu patrimonio (Activo) o restan (Pasivo/Deuda).</p>
-            
-            <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4 items-center">
-                <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo, Inversiones)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Préstamo, Indexados)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                <select id="newType" class="w-full sm:w-auto bg-gray-900 border border-gray-700 text-white text-sm rounded-xl p-2.5 outline-none">
-                    <option value="positivo">Activo (+ Suma)</option>
-                    <option value="negativo">Pasivo (- Resta)</option>
-                </select>
-                <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap">Añadir Subgrupo</button>
-            </form>
-
-            <div id="subgroupsList" class="flex flex-wrap gap-2">
-                <!-- Dinámico -->
             </div>
         </div>
 
-        <!-- Formulario de Entrada / Edición de Datos Mensuales -->
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow" id="formContainer">
-            <div class="flex justify-between items-center mb-4">
-                <h2 id="formTitle" class="text-lg font-semibold text-gray-200">Añadir / Actualizar Registro Mensual</h2>
-                <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-xl text-xs font-medium transition">Cancelar Edición</button>
-            </div>
-            
-            <form id="patrimonioForm" onsubmit="saveRecord(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs text-gray-400 mb-1">Fecha / Mes</label>
-                    <input type="date" id="fecha" required class="w-full sm:w-1/3 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+        <!-- ================= PESTAÑA 2: INTRODUCCIÓN Y GESTIÓN DE DATOS ================= -->
+        <div id="tabDatos" class="space-y-6 hidden">
+            <!-- Formulario de Entrada / Edición de Datos Mensuales -->
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow" id="formContainer">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="formTitle" class="text-lg font-semibold text-gray-200">Añadir / Actualizar Registro Mensual</h2>
+                    <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-xl text-xs font-medium transition">Cancelar Edición</button>
                 </div>
                 
-                <div id="subgroupsInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <!-- Dinámico según configuración -->
-                </div>
+                <form id="patrimonioForm" onsubmit="saveRecord(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs text-gray-400 mb-1">Fecha / Mes</label>
+                        <input type="date" id="fecha" required class="w-full sm:w-1/3 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                    </div>
+                    
+                    <div id="subgroupsInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <!-- Dinámico según configuración -->
+                    </div>
 
-                <div class="flex justify-end pt-2">
-                    <button type="submit" id="submitBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">Guardar Registro Mensual</button>
-                </div>
-            </form>
-        </div>
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="submitBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">Guardar Registro Mensual</button>
+                    </div>
+                </form>
+            </div>
 
-        <!-- Historial de Registros -->
-        <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow overflow-x-auto">
-            <h2 class="text-lg font-semibold mb-4 text-gray-200">Historial de Registros</h2>
-            <table class="w-full text-left text-sm text-gray-300">
-                <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
-                    <tr>
-                        <th class="p-3">Fecha</th>
-                        <th class="p-3">Detalle por Grupos</th>
-                        <th class="p-3">Total</th>
-                        <th class="p-3">Incremento</th>
-                        <th class="p-3 text-right">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody id="dataTableBody" class="divide-y divide-gray-700">
+            <!-- Configuración de Subgrupos -->
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
+                <h2 class="text-lg font-semibold mb-2 text-gray-200">Configuración de Grupos y Subgrupos</h2>
+                <p class="text-xs text-gray-400 mb-4">Añade categorías y especifica si suman a tu patrimonio (Activo) o restan (Pasivo/Deuda).</p>
+                
+                <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4 items-center">
+                    <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo, Inversiones)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                    <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Préstamo, Indexados)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                    <select id="newType" class="w-full sm:w-auto bg-gray-900 border border-gray-700 text-white text-sm rounded-xl p-2.5 outline-none">
+                        <option value="positivo">Activo (+ Suma)</option>
+                        <option value="negativo">Pasivo (- Resta)</option>
+                    </select>
+                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap">Añadir Subgrupo</button>
+                </form>
+
+                <div id="subgroupsList" class="flex flex-wrap gap-2">
                     <!-- Dinámico -->
-                </tbody>
-            </table>
+                </div>
+            </div>
+
+            <!-- Historial de Registros -->
+            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow overflow-x-auto">
+                <h2 class="text-lg font-semibold mb-4 text-gray-200">Historial Completo de Registros</h2>
+                <table class="w-full text-left text-sm text-gray-300">
+                    <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
+                        <tr>
+                            <th class="p-3">Fecha</th>
+                            <th class="p-3">Detalle por Grupos</th>
+                            <th class="p-3">Total</th>
+                            <th class="p-3">Incremento</th>
+                            <th class="p-3 text-right">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody" class="divide-y divide-gray-700">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
@@ -148,12 +176,33 @@
         let chartInstance = null;
         let distribucionChartInstance = null;
         let editingIndex = null;
+        let selectedYear = 'TODOS';
+
+        function switchTab(tab) {
+            const tabDashboard = document.getElementById('tabDashboard');
+            const tabDatos = document.getElementById('tabDatos');
+            const tabDashboardBtn = document.getElementById('tabDashboardBtn');
+            const tabDatosBtn = document.getElementById('tabDatosBtn');
+
+            if (tab === 'dashboard') {
+                tabDashboard.classList.remove('hidden');
+                tabDatos.classList.add('hidden');
+                
+                tabDashboardBtn.className = "px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow";
+                tabDatosBtn.className = "px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200";
+            } else {
+                tabDashboard.classList.add('hidden');
+                tabDatos.classList.remove('hidden');
+
+                tabDatosBtn.className = "px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow";
+                tabDashboardBtn.className = "px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200";
+            }
+        }
 
         function isSustractor(sub) {
             if (sub.tipo) {
                 return sub.tipo === 'negativo';
             }
-            // Compatibilidad hacia atrás si no tenía el campo 'tipo'
             return sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
         }
 
@@ -207,7 +256,7 @@
 
         function calculateTotals(r) {
             let total = 0;
-            if (r.valores) {
+            if (r && r.valores) {
                 subgroups.forEach(sub => {
                     const val = parseFloat(r.valores[sub.id] || 0);
                     if (isSustractor(sub)) {
@@ -220,65 +269,75 @@
             return total;
         }
 
-        function updateYearSelector(years, userChangedManual) {
+        function populateYearSelector(years) {
             const select = document.getElementById('yearSelector');
-            const currentYearStr = new Date().getFullYear().toString();
-            
-            let selectedVal = userChangedManual ? select.value : currentYearStr;
+            const prevValue = select.value || selectedYear;
             select.innerHTML = '';
+
+            // Opción para ver todo el histórico
+            const optAll = document.createElement('option');
+            optAll.value = 'TODOS';
+            optAll.innerText = '📊 Todo el Histórico';
+            select.appendChild(optAll);
 
             years.forEach(year => {
                 const opt = document.createElement('option');
                 opt.value = year;
-                opt.innerText = `Desde inicio ${year}`;
+                opt.innerText = `📅 Año ${year}`;
                 select.appendChild(opt);
             });
 
-            if (years.includes(selectedVal)) {
-                select.value = selectedVal;
+            if (years.includes(prevValue) || prevValue === 'TODOS') {
+                select.value = prevValue;
             } else if (years.length > 0) {
+                // Por defecto seleccionar el año más reciente
                 select.value = years[years.length - 1];
             }
+            selectedYear = select.value;
         }
 
-        function updateApp(userChangedManual = false) {
+        function onYearChange() {
+            selectedYear = document.getElementById('yearSelector').value;
+            updateApp();
+        }
+
+        function updateApp() {
             records.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             localStorage.setItem('patrimonio_records', JSON.stringify(records));
 
+            // Extraer años disponibles
             const yearsSet = new Set();
             records.forEach(r => {
                 const y = r.fecha.split('-')[0];
                 yearsSet.add(y);
             });
             let years = Array.from(yearsSet).sort();
-            
-            const currentYearStr = new Date().getFullYear().toString();
-            if (!yearsSet.has(currentYearStr)) {
-                years.push(currentYearStr);
-                years.sort();
+
+            populateYearSelector(years);
+
+            // Filtrar registros según el año seleccionado
+            let filteredRecords = records;
+            if (selectedYear !== 'TODOS') {
+                filteredRecords = records.filter(r => r.fecha.startsWith(selectedYear));
             }
 
-            updateYearSelector(years, userChangedManual);
-            const selectedYear = document.getElementById('yearSelector').value || currentYearStr;
+            // Actualizar etiqueta del gráfico
+            const chartYearLabel = document.getElementById('chartYearLabel');
+            chartYearLabel.innerText = selectedYear === 'TODOS' ? 'Mostrando todo el histórico' : `Filtrado: Año ${selectedYear}`;
 
+            // Rellenar la Tabla de Historial (Pestaña Datos) siempre con todos los registros
             const tbody = document.getElementById('dataTableBody');
             tbody.innerHTML = '';
 
-            let labels = [];
-            let dataTotales = [];
-            let prevTotal = null;
-
+            let prevTotalTable = null;
             if (records.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay registros introducidos todavía.</td></tr>`;
             }
 
             records.forEach((r, index) => {
                 const total = calculateTotals(r);
-                const incremento = prevTotal !== null ? total - prevTotal : 0;
-                prevTotal = total;
-
-                labels.push(r.fecha);
-                dataTotales.push(total);
+                const incremento = prevTotalTable !== null ? total - prevTotalTable : 0;
+                prevTotalTable = total;
 
                 let detalleHtml = '<div class="text-xs space-y-0.5 text-gray-400">';
                 if (r.valores) {
@@ -309,32 +368,54 @@
                 tbody.appendChild(row);
             });
 
-            if (records.length > 0) {
-                const last = calculateTotals(records[records.length - 1]);
-                const secondLast = records.length > 1 ? calculateTotals(records[records.length - 2]) : last;
-                const ultimoInc = last - secondLast;
+            // Datos para las Tarjetas Resumen y Gráficos filtrados
+            let chartLabels = [];
+            let chartDataTotales = [];
 
-                document.getElementById('totalPatrimonio').innerText = last.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
+            filteredRecords.forEach(r => {
+                chartLabels.push(r.fecha);
+                chartDataTotales.push(calculateTotals(r));
+            });
+
+            if (filteredRecords.length > 0) {
+                // Patrimonio Total al cierre del filtro seleccionado
+                const lastRecord = filteredRecords[filteredRecords.length - 1];
+                const lastTotal = calculateTotals(lastRecord);
+
+                // Incremento mensual del último registro visible
+                let prevRecord = null;
+                const lastIndexInAll = records.findIndex(r => r.fecha === lastRecord.fecha);
+                if (lastIndexInAll > 0) {
+                    prevRecord = records[lastIndexInAll - 1];
+                }
+
+                const ultimoInc = prevRecord ? lastTotal - calculateTotals(prevRecord) : 0;
+
+                // Crecimiento Anual dentro del período filtrado
+                let basePatrimonio = 0;
+                if (selectedYear !== 'TODOS') {
+                    // Buscar el cierre del año anterior si existe
+                    const targetYearInt = parseInt(selectedYear);
+                    const prevYearStr = (targetYearInt - 1).toString();
+                    const prevYearRecords = records.filter(r => r.fecha.startsWith(prevYearStr));
+                    
+                    if (prevYearRecords.length > 0) {
+                        basePatrimonio = calculateTotals(prevYearRecords[prevYearRecords.length - 1]);
+                    } else {
+                        basePatrimonio = calculateTotals(filteredRecords[0]);
+                    }
+                } else {
+                    basePatrimonio = calculateTotals(records[0]);
+                }
+
+                const crecimientoAnual = lastTotal - basePatrimonio;
+
+                document.getElementById('totalPatrimonio').innerText = lastTotal.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
                 
                 const incEl = document.getElementById('ultimoIncremento');
                 incEl.innerText = (ultimoInc > 0 ? '+' : '') + ultimoInc.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
                 incEl.className = `text-3xl font-extrabold mt-1 ${ultimoInc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
-                let baseAnual = calculateTotals(records[0]);
-                const targetYearInt = parseInt(selectedYear);
-                const prevYearStr = (targetYearInt - 1).toString();
-                
-                const prevYearRecords = records.filter(r => r.fecha.startsWith(prevYearStr));
-                if (prevYearRecords.length > 0) {
-                    baseAnual = calculateTotals(prevYearRecords[prevYearRecords.length - 1]);
-                } else {
-                    const currentYearRecord = records.find(r => r.fecha.startsWith(selectedYear));
-                    if (currentYearRecord) {
-                        baseAnual = calculateTotals(currentYearRecord);
-                    }
-                }
-
-                const crecimientoAnual = last - baseAnual;
                 const anuEl = document.getElementById('crecimientoAnual');
                 anuEl.innerText = (crecimientoAnual > 0 ? '+' : '') + crecimientoAnual.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
             } else {
@@ -343,8 +424,9 @@
                 document.getElementById('crecimientoAnual').innerText = '0,00 €';
             }
 
-            updateChart(labels, dataTotales);
-            updateDistribucionChart();
+            // Actualizar ambas gráficas con los registros filtrados
+            updateChart(chartLabels, chartDataTotales);
+            updateDistribucionChart(filteredRecords);
         }
 
         function updateChart(labels, data) {
@@ -377,13 +459,13 @@
             });
         }
 
-        function updateDistribucionChart() {
+        function updateDistribucionChart(filteredRecords) {
             const ctx = document.getElementById('distribucionChart').getContext('2d');
             if (distribucionChartInstance) distribucionChartInstance.destroy();
 
-            if (records.length === 0) return;
+            if (!filteredRecords || filteredRecords.length === 0) return;
 
-            const lastRecord = records[records.length - 1];
+            const lastRecord = filteredRecords[filteredRecords.length - 1];
             let labels = [];
             let data = [];
             let colors = [
@@ -391,7 +473,6 @@
                 '#fbbf24', '#38bdf8', '#818cf8', '#4ade80'
             ];
 
-            // Agrupar únicamente subgrupos positivos (Activos)
             subgroups.forEach((sub, i) => {
                 if (!isSustractor(sub)) {
                     const val = parseFloat((lastRecord.valores && lastRecord.valores[sub.id]) || 0);
@@ -457,6 +538,7 @@
             document.getElementById('submitBtn').className = 'bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition';
             document.getElementById('cancelEditBtn').classList.remove('hidden');
 
+            switchTab('datos');
             document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -500,6 +582,7 @@
 
             cancelEdit();
             updateApp();
+            switchTab('dashboard');
         }
 
         function deleteRecord(index) {
