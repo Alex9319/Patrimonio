@@ -7,24 +7,34 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="bg-gray-900 text-gray-100 font-sans antialiased min-h-screen p-4 sm:p-6">
+<body class="bg-gray-900 text-gray-100 font-sans antialiased min-h-screen p-3 sm:p-6">
     <div class="max-w-5xl mx-auto space-y-6">
         
         <!-- Header con Navegación por Pestañas -->
-        <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-6 rounded-2xl shadow-lg border border-gray-700 gap-4">
-            <div>
-                <h1 class="text-2xl font-bold text-emerald-400">Rumbo a tu Patrimonio</h1>
-                <p class="text-sm text-gray-400">Control de finanzas personales y patrimonio neto</p>
+        <header class="flex flex-col sm:flex-row justify-between items-center bg-gray-800 p-5 sm:p-6 rounded-2xl shadow-lg border border-gray-700 gap-4">
+            <div class="text-center sm:text-left">
+                <h1 class="text-xl sm:text-2xl font-bold text-emerald-400">Rumbo a tu Patrimonio</h1>
+                <p class="text-xs sm:text-sm text-gray-400">Control de finanzas personales y patrimonio neto</p>
             </div>
             
             <!-- Navegación de Pestañas -->
-            <div class="flex bg-gray-900 p-1.5 rounded-xl border border-gray-700/80">
-                <button id="tabDashboardBtn" onclick="switchTab('dashboard')" class="px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow">
+            <div class="flex w-full sm:w-auto justify-center bg-gray-900 p-1.5 rounded-xl border border-gray-700/80">
+                <button id="tabDashboardBtn" onclick="switchTab('dashboard')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-emerald-600 text-white shadow">
                     📊 Resumen & Gráficos
                 </button>
-                <button id="tabDatosBtn" onclick="switchTab('datos')" class="px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200">
-                    📝 Introducción de Datos
+                <button id="tabDatosBtn" onclick="switchTab('datos')" class="flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-gray-400 hover:text-gray-200">
+                    📝 Registros y Ajustes
                 </button>
+            </div>
+
+            <!-- Acciones de Backup -->
+            <div class="flex gap-2 w-full sm:w-auto justify-center">
+                <button onclick="exportData()" class="flex-1 sm:flex-none justify-center bg-blue-600/80 hover:bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
+                    ⬇️ Exportar JSON
+                </button>
+                <label class="flex-1 sm:flex-none justify-center bg-emerald-600/80 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition flex items-center gap-1.5">
+                    ⬆️ Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
+                </label>
             </div>
         </header>
 
@@ -46,33 +56,33 @@
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
                     <p class="text-sm text-gray-400">Patrimonio Total (al cierre del período)</p>
-                    <p id="totalPatrimonio" class="text-3xl font-extrabold text-white mt-1">0,00 €</p>
+                    <p id="totalPatrimonio" class="text-2xl sm:text-3xl font-extrabold text-white mt-1">0,00 €</p>
                 </div>
                 <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
                     <p class="text-sm text-gray-400">Último Incremento Mensual</p>
-                    <p id="ultimoIncremento" class="text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
+                    <p id="ultimoIncremento" class="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">0,00 €</p>
                 </div>
                 <div class="bg-gray-800 p-5 rounded-2xl border border-gray-700 shadow">
                     <p class="text-sm text-gray-400">Crecimiento en el Año Seleccionado</p>
-                    <p id="crecimientoAnual" class="text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
+                    <p id="crecimientoAnual" class="text-2xl sm:text-3xl font-extrabold text-blue-400 mt-1">0,00 €</p>
                 </div>
             </div>
 
             <!-- Sección de Gráficas -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Gráfica 1: Evolución Temporal -->
-                <div class="lg:col-span-2 bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
-                    <div class="flex justify-between items-center mb-4">
+                <div class="lg:col-span-2 bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-700 shadow">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
                         <h2 class="text-lg font-semibold text-gray-200">Evolución del Patrimonio</h2>
                         <span id="chartYearLabel" class="text-xs text-emerald-400 font-medium bg-emerald-950 border border-emerald-800 px-2.5 py-1 rounded-lg"></span>
                     </div>
-                    <div class="relative h-72">
+                    <div class="relative h-64 sm:h-72">
                         <canvas id="patrimonioChart"></canvas>
                     </div>
                 </div>
 
                 <!-- Gráfica 2: Distribución de Activos Positivos (Doughnut) -->
-                <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
+                <div class="bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-700 shadow flex flex-col justify-between">
                     <div>
                         <h2 class="text-lg font-semibold mb-1 text-gray-200">Distribución del Dinero</h2>
                         <p class="text-xs text-gray-400 mb-4">Excluye pasivos / deudas. Basado en el último mes visible.</p>
@@ -85,85 +95,158 @@
         </div>
 
         <!-- ================= PESTAÑA 2: INTRODUCCIÓN Y GESTIÓN DE DATOS ================= -->
-        <div id="tabDatos" class="space-y-6 hidden">
-            <!-- Acciones de Backup -->
-            <div class="flex gap-2">
-                <button onclick="exportData()" class="bg-blue-600/80 hover:bg-blue-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium transition flex items-center gap-1.5">
-                    ⬇️ Exportar JSON
+        <div id="tabDatos" class="space-y-5 hidden">
+            
+            <!-- Barra de Acción Rápida (Compacta en Móvil) -->
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="openRecordModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white p-3.5 rounded-2xl shadow-lg font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95">
+                    <span class="text-base">➕</span> Nuevo Registro
                 </button>
-                <label class="bg-emerald-600/80 hover:bg-emerald-600 text-white px-3.5 py-2 rounded-xl text-xs font-medium cursor-pointer transition flex items-center gap-1.5">
-                    ⬆️ Importar JSON <input type="file" id="importFile" class="hidden" onchange="importData(event)">
-                </label>
+                <button onclick="openSubgroupsModal()" class="bg-gray-800 hover:bg-gray-750 border border-gray-700 text-indigo-400 p-3.5 rounded-2xl shadow font-semibold text-xs sm:text-sm flex items-center justify-center gap-2 transition active:scale-95">
+                    <span class="text-base">⚙️</span> Cuentas / Grupos
+                </button>
             </div>
-            <!-- Formulario de Entrada / Edición de Datos Mensuales -->
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow" id="formContainer">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 id="formTitle" class="text-lg font-semibold text-gray-200">Añadir / Actualizar Registro Mensual</h2>
-                    <button id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-700 hover:bg-gray-600 text-gray-200 px-3 py-1 rounded-xl text-xs font-medium transition">Cancelar Edición</button>
-                </div>
-                
-                <form id="patrimonioForm" onsubmit="saveRecord(event)" class="space-y-4">
+
+            <!-- Historial de Registros (Protagonista inmediato) -->
+            <div class="bg-gray-800 p-5 sm:p-6 rounded-2xl border border-gray-700 shadow">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
                     <div>
-                        <label class="block text-xs text-gray-400 mb-1">Fecha / Mes</label>
-                        <input type="date" id="fecha" required class="w-full sm:w-1/3 bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
+                        <h2 class="text-lg font-semibold text-gray-200">Historial de Registros</h2>
+                        <p class="text-xs text-gray-400">Pulsa en las columnas o usa el selector para ordenar</p>
                     </div>
-                    
-                    <div id="subgroupsInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <!-- Dinámico según configuración -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <span class="text-xs text-gray-400 whitespace-nowrap">Ordenar por:</span>
+                        <select id="sortSelect" onchange="handleSortSelect()" class="w-full sm:w-auto bg-gray-900 border border-gray-700 text-gray-200 text-xs rounded-xl px-3 py-2 outline-none focus:border-emerald-500">
+                            <option value="fecha-desc">📅 Fecha (Más reciente primero)</option>
+                            <option value="fecha-asc">📅 Fecha (Más antiguo primero)</option>
+                            <option value="total-desc">💰 Total (Mayor a menor)</option>
+                            <option value="total-asc">💰 Total (Menor a mayor)</option>
+                            <option value="inc-desc">📈 Incremento (Mayor a menor)</option>
+                            <option value="inc-asc">📉 Incremento (Menor a mayor)</option>
+                        </select>
                     </div>
-
-                    <div class="flex justify-end pt-2">
-                        <button type="submit" id="submitBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">Guardar Registro Mensual</button>
-                    </div>
-                </form>
-            </div>
-
-            <!-- Configuración de Subgrupos -->
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow">
-                <h2 class="text-lg font-semibold mb-2 text-gray-200">Configuración de Grupos y Subgrupos</h2>
-                <p class="text-xs text-gray-400 mb-4">Añade categorías y especifica si suman a tu patrimonio (Activo) o restan (Pasivo/Deuda).</p>
-                
-                <form onsubmit="addSubgroup(event)" class="flex flex-col sm:flex-row gap-3 mb-4 items-center">
-                    <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo, Inversiones)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                    <input type="text" id="newSubgroup" placeholder="Subgrupo / Cuenta (ej. Préstamo, Indexados)" required class="flex-1 w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm">
-                    <select id="newType" class="w-full sm:w-auto bg-gray-900 border border-gray-700 text-white text-sm rounded-xl p-2.5 outline-none">
-                        <option value="positivo">Activo (+ Suma)</option>
-                        <option value="negativo">Pasivo (- Resta)</option>
-                    </select>
-                    <button type="submit" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition whitespace-nowrap">Añadir Subgrupo</button>
-                </form>
-
-                <div id="subgroupsList" class="flex flex-wrap gap-2">
-                    <!-- Dinámico -->
                 </div>
-            </div>
 
-            <!-- Historial de Registros -->
-            <div class="bg-gray-800 p-6 rounded-2xl border border-gray-700 shadow overflow-x-auto">
-                <h2 class="text-lg font-semibold mb-4 text-gray-200">Historial Completo de Registros</h2>
-                <table class="w-full text-left text-sm text-gray-300">
-                    <thead class="bg-gray-900 text-gray-400 uppercase text-xs">
-                        <tr>
-                            <th class="p-3">Fecha</th>
-                            <th class="p-3">Detalle por Grupos</th>
-                            <th class="p-3">Total</th>
-                            <th class="p-3">Incremento</th>
-                            <th class="p-3 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dataTableBody" class="divide-y divide-gray-700">
-                        <!-- Dinámico -->
-                    </tbody>
-                </table>
+                <!-- Vista Desktop: Tabla -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left text-sm text-gray-300">
+                        <thead class="bg-gray-900 text-gray-400 uppercase text-xs select-none">
+                            <tr>
+                                <th onclick="toggleSort('fecha')" class="p-3 cursor-pointer hover:text-emerald-400 transition">
+                                    <div class="flex items-center gap-1">Fecha <span id="sortIcon_fecha" class="text-emerald-400">↓</span></div>
+                                </th>
+                                <th class="p-3">Detalle por Grupos</th>
+                                <th onclick="toggleSort('total')" class="p-3 cursor-pointer hover:text-emerald-400 transition">
+                                    <div class="flex items-center gap-1">Total <span id="sortIcon_total" class="text-gray-600">↕</span></div>
+                                </th>
+                                <th onclick="toggleSort('inc')" class="p-3 cursor-pointer hover:text-emerald-400 transition">
+                                    <div class="flex items-center gap-1">Incremento <span id="sortIcon_inc" class="text-gray-600">↕</span></div>
+                                </th>
+                                <th class="p-3 text-right">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="dataTableBody" class="divide-y divide-gray-700">
+                            <!-- Dinámico Desktop -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Vista Móvil: Tarjetas Apiladas -->
+                <div id="mobileCardsContainer" class="md:hidden space-y-3">
+                    <!-- Dinámico Móvil -->
+                </div>
             </div>
         </div>
 
     </div>
 
+    <!-- ================= MODAL 1: AÑADIR / EDITAR REGISTRO MENSUAL ================= -->
+    <div id="recordModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-gray-800 border-t sm:border border-gray-700 w-full max-w-2xl rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center p-4 sm:p-5 border-b border-gray-700 bg-gray-800/95">
+                <h2 id="formTitle" class="text-base sm:text-lg font-bold text-emerald-400">Añadir Registro Mensual</h2>
+                <button type="button" onclick="closeRecordModal()" class="text-gray-400 hover:text-white bg-gray-700/70 hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition">×</button>
+            </div>
+            
+            <!-- Cuerpo con Scroll Interno -->
+            <form id="patrimonioForm" onsubmit="saveRecord(event)" class="flex flex-col flex-1 overflow-hidden">
+                <div class="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1">
+                    <div class="bg-gray-900/70 p-3 rounded-xl border border-gray-700/80 flex items-center justify-between gap-3">
+                        <label for="fecha" class="text-xs sm:text-sm font-medium text-gray-300">📅 Fecha del cierre:</label>
+                        <input type="date" id="fecha" required class="bg-gray-800 border border-gray-600 rounded-lg px-3 py-1.5 text-white text-sm focus:border-emerald-500 outline-none">
+                    </div>
+                    
+                    <!-- Inputs agrupados visualmente y compactos en móvil -->
+                    <div id="subgroupsInputs" class="space-y-4">
+                        <!-- Dinámico agrupado por categoría -->
+                    </div>
+                </div>
+
+                <!-- Footer Fijo del Modal -->
+                <div class="p-4 border-t border-gray-700 bg-gray-850 flex gap-3">
+                    <button type="button" onclick="closeRecordModal()" class="flex-1 sm:flex-none bg-gray-700 hover:bg-gray-600 text-gray-200 px-5 py-2.5 rounded-xl text-sm font-medium transition">Cancelar</button>
+                    <button type="submit" id="submitBtn" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg">Guardar Registro</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL 2: GESTIÓN DE GRUPOS Y SUBGRUPOS ================= -->
+    <div id="subgroupsModal" class="fixed inset-0 z-50 hidden bg-black/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="bg-gray-800 border-t sm:border border-gray-700 w-full max-w-2xl rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <!-- Cabecera del Modal -->
+            <div class="flex justify-between items-center p-4 sm:p-5 border-b border-gray-700 bg-gray-800/95">
+                <div>
+                    <h2 class="text-base sm:text-lg font-bold text-indigo-400">Cuentas, Grupos y Pasivos</h2>
+                    <p class="text-[11px] text-gray-400">Configura qué cuentas suman (Activo) o restan (Pasivo)</p>
+                </div>
+                <button type="button" onclick="closeSubgroupsModal()" class="text-gray-400 hover:text-white bg-gray-700/70 hover:bg-gray-700 w-8 h-8 rounded-full flex items-center justify-center text-lg font-bold transition">×</button>
+            </div>
+
+            <!-- Cuerpo con Scroll Interno -->
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-5 flex-1">
+                <!-- Formulario compacto para añadir -->
+                <form onsubmit="addSubgroup(event)" class="bg-gray-900/70 p-4 rounded-xl border border-gray-700/80 space-y-3">
+                    <p class="text-xs font-semibold text-gray-300 uppercase tracking-wider">Nueva Cuenta / Categoría</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <input type="text" id="newGroup" placeholder="Grupo (ej. Efectivo, Inversiones)" required class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-white text-sm outline-none focus:border-indigo-500">
+                        <input type="text" id="newSubgroup" placeholder="Nombre (ej. Indexados, Hipoteca)" required class="w-full bg-gray-800 border border-gray-700 rounded-xl p-2.5 text-white text-sm outline-none focus:border-indigo-500">
+                    </div>
+                    <div class="flex gap-2.5">
+                        <select id="newType" class="flex-1 bg-gray-800 border border-gray-700 text-white text-sm rounded-xl p-2.5 outline-none focus:border-indigo-500">
+                            <option value="positivo">Activo (+ Suma al total)</option>
+                            <option value="negativo">Pasivo (- Resta del total)</option>
+                        </select>
+                        <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition whitespace-nowrap">➕ Añadir</button>
+                    </div>
+                </form>
+
+                <!-- Lista de subgrupos actuales -->
+                <div>
+                    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2.5">Cuentas Configuradas (<span id="subgroupsCount">0</span>)</p>
+                    <div id="subgroupsList" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 border-t border-gray-700 bg-gray-850 flex justify-end">
+                <button type="button" onclick="closeSubgroupsModal()" class="w-full sm:w-auto bg-gray-700 hover:bg-gray-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition">Listo</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let subgroups = JSON.parse(localStorage.getItem('patrimonio_subgroups')) || [
+            { id: 'rem1', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 1', tipo: 'positivo' },
+            { id: 'rem2', grupo: 'Efectivo', nombre: 'Cuenta Remunerada 2', tipo: 'positivo' },
             { id: 'diaria', grupo: 'Efectivo', nombre: 'Cuenta Diaria / Efectivo', tipo: 'positivo' },
-            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta', tipo: 'negativo' }
+            { id: 'tarjeta', grupo: 'Efectivo', nombre: 'Cobro Tarjeta', tipo: 'negativo' },
+            { id: 'fondos', grupo: 'Inversiones', nombre: 'Fondos Indexados', tipo: 'positivo' },
+            { id: 'criptos', grupo: 'Inversiones', nombre: 'Criptomonedas', tipo: 'positivo' },
+            { id: 'pias', grupo: 'Inversiones', nombre: 'PIAS', tipo: 'positivo' }
         ];
 
         let records = JSON.parse(localStorage.getItem('patrimonio_records')) || [];
@@ -171,6 +254,8 @@
         let distribucionChartInstance = null;
         let editingIndex = null;
         let selectedYear = 'TODOS';
+        let sortColumn = 'fecha';
+        let sortDirection = 'desc';
 
         function switchTab(tab) {
             const tabDashboard = document.getElementById('tabDashboard');
@@ -182,44 +267,113 @@
                 tabDashboard.classList.remove('hidden');
                 tabDatos.classList.add('hidden');
                 
-                tabDashboardBtn.className = "px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow";
-                tabDatosBtn.className = "px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200";
+                tabDashboardBtn.className = "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-emerald-600 text-white shadow";
+                tabDatosBtn.className = "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-gray-400 hover:text-gray-200";
             } else {
                 tabDashboard.classList.add('hidden');
                 tabDatos.classList.remove('hidden');
 
-                tabDatosBtn.className = "px-5 py-2 rounded-lg text-sm font-semibold transition bg-emerald-600 text-white shadow";
-                tabDashboardBtn.className = "px-5 py-2 rounded-lg text-sm font-medium transition text-gray-400 hover:text-gray-200";
+                tabDatosBtn.className = "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-semibold transition bg-emerald-600 text-white shadow";
+                tabDashboardBtn.className = "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-medium transition text-gray-400 hover:text-gray-200";
             }
         }
 
-        function isSustractor(sub) {
-            if (sub.tipo) {
-                return sub.tipo === 'negativo';
+        // Control de Modales
+        function openRecordModal(isEdit = false) {
+            if (!isEdit) {
+                editingIndex = null;
+                document.getElementById('patrimonioForm').reset();
+                document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
+                subgroups.forEach(sub => {
+                    const input = document.getElementById(`val_${sub.id}`);
+                    if (input) input.value = 0;
+                });
+                document.getElementById('formTitle').innerText = 'Añadir Registro Mensual';
+                document.getElementById('submitBtn').innerText = 'Guardar Registro';
+                document.getElementById('submitBtn').className = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg';
             }
+            document.getElementById('recordModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeRecordModal() {
+            editingIndex = null;
+            document.getElementById('recordModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function openSubgroupsModal() {
+            document.getElementById('subgroupsModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeSubgroupsModal() {
+            document.getElementById('subgroupsModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function isSustractor(sub) {
+            if (sub.tipo) return sub.tipo === 'negativo';
             return sub.nombre.toLowerCase().includes('tarjeta') || sub.nombre.toLowerCase().includes('deuda');
         }
 
         function renderSubgroupsConfig() {
             const listContainer = document.getElementById('subgroupsList');
             const inputsContainer = document.getElementById('subgroupsInputs');
+            const countEl = document.getElementById('subgroupsCount');
             
             listContainer.innerHTML = '';
             inputsContainer.innerHTML = '';
+            if (countEl) countEl.innerText = subgroups.length;
 
+            // Agrupar subgrupos por categoría para el formulario del modal
+            const grouped = {};
             subgroups.forEach((sub, index) => {
+                if (!grouped[sub.grupo]) grouped[sub.grupo] = [];
+                grouped[sub.grupo].push({ sub, index });
+
+                // Renderizar en la lista del Modal de Configuración
                 const sustractor = isSustractor(sub);
                 const badge = document.createElement('div');
-                badge.className = "bg-gray-900 border border-gray-700 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2";
-                badge.innerHTML = `<span class="text-emerald-400 font-semibold">${sub.grupo}:</span> <span>${sub.nombre}</span> ${sustractor ? '<span class="text-rose-400 text-[10px] bg-rose-950 px-1.5 py-0.5 rounded font-medium">Pasivo (-)</span>' : '<span class="text-emerald-400 text-[10px] bg-emerald-950 px-1.5 py-0.5 rounded font-medium">Activo (+)</span>'} <button type="button" onclick="deleteSubgroup(${index})" class="text-rose-400 hover:text-rose-300 ml-1 font-bold">×</button>`;
-                listContainer.appendChild(badge);
-
-                const inputDiv = document.createElement('div');
-                inputDiv.innerHTML = `
-                    <label class="block text-xs text-gray-400 mb-1"><span class="text-emerald-400">${sub.grupo}</span> / ${sub.nombre} ${sustractor ? '<span class="text-rose-400">(se resta)</span>' : ''}</label>
-                    <input type="number" step="any" id="val_${sub.id}" value="0" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white text-sm sub-input">
+                badge.className = "bg-gray-900 border border-gray-700 px-3 py-2 rounded-xl text-xs flex items-center justify-between gap-2";
+                badge.innerHTML = `
+                    <div class="truncate">
+                        <span class="text-indigo-400 font-semibold">${sub.grupo}</span> · <span class="text-gray-200">${sub.nombre}</span>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0">
+                        ${sustractor 
+                            ? '<span class="text-rose-400 text-[10px] bg-rose-950/80 border border-rose-800/50 px-1.5 py-0.5 rounded font-medium">- Resta</span>' 
+                            : '<span class="text-emerald-400 text-[10px] bg-emerald-950/80 border border-emerald-800/50 px-1.5 py-0.5 rounded font-medium">+ Suma</span>'}
+                        <button type="button" onclick="deleteSubgroup(${index})" class="text-rose-400 hover:text-rose-300 bg-rose-950/40 w-6 h-6 rounded-lg flex items-center justify-center font-bold">×</button>
+                    </div>
                 `;
-                inputsContainer.appendChild(inputDiv);
+                listContainer.appendChild(badge);
+            });
+
+            // Renderizar inputs agrupados y compactos (fila horizontal en móvil: etiqueta a la izq, importe a la der)
+            Object.keys(grouped).forEach(grupoName => {
+                const groupSection = document.createElement('div');
+                groupSection.className = "bg-gray-900/50 border border-gray-700/70 rounded-xl p-3.5 space-y-2.5";
+                
+                let groupHtml = `<h3 class="text-xs font-bold uppercase tracking-wider text-emerald-400 border-b border-gray-800 pb-1.5">${grupoName}</h3>`;
+                
+                grouped[grupoName].forEach(({ sub }) => {
+                    const sustractor = isSustractor(sub);
+                    groupHtml += `
+                        <div class="flex items-center justify-between gap-3">
+                            <label for="val_${sub.id}" class="text-xs sm:text-sm text-gray-300 flex-1 leading-tight">
+                                ${sub.nombre} ${sustractor ? '<span class="text-rose-400 text-[11px] font-medium">(-)</span>' : ''}
+                            </label>
+                            <div class="relative w-32 sm:w-36 shrink-0">
+                                <input type="number" step="any" id="val_${sub.id}" value="0" onfocus="this.select()" class="w-full bg-gray-800 border border-gray-700 focus:border-emerald-500 rounded-lg py-1.5 pl-2.5 pr-6 text-right text-white text-sm font-medium outline-none sub-input">
+                                <span class="absolute right-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400">€</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                groupSection.innerHTML = groupHtml;
+                inputsContainer.appendChild(groupSection);
             });
         }
 
@@ -268,7 +422,6 @@
             const prevValue = select.value || selectedYear;
             select.innerHTML = '';
 
-            // Opción para ver todo el histórico
             const optAll = document.createElement('option');
             optAll.value = 'TODOS';
             optAll.innerText = '📊 Todo el Histórico';
@@ -284,7 +437,6 @@
             if (years.includes(prevValue) || prevValue === 'TODOS') {
                 select.value = prevValue;
             } else if (years.length > 0) {
-                // Por defecto seleccionar el año más reciente
                 select.value = years[years.length - 1];
             }
             selectedYear = select.value;
@@ -295,11 +447,172 @@
             updateApp();
         }
 
+        function toggleSort(col) {
+            if (sortColumn === col) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortColumn = col;
+                sortDirection = 'desc';
+            }
+            document.getElementById('sortSelect').value = `${sortColumn}-${sortDirection}`;
+            updateSortIcons();
+            renderHistoryTable();
+        }
+
+        function handleSortSelect() {
+            const val = document.getElementById('sortSelect').value;
+            const [col, dir] = val.split('-');
+            sortColumn = col;
+            sortDirection = dir;
+            updateSortIcons();
+            renderHistoryTable();
+        }
+
+        function updateSortIcons() {
+            ['fecha', 'total', 'inc'].forEach(col => {
+                const iconEl = document.getElementById(`sortIcon_${col}`);
+                if (iconEl) {
+                    if (sortColumn === col) {
+                        iconEl.innerText = sortDirection === 'asc' ? '↑' : '↓';
+                        iconEl.className = 'text-emerald-400 font-bold';
+                    } else {
+                        iconEl.innerText = '↕';
+                        iconEl.className = 'text-gray-600';
+                    }
+                }
+            });
+        }
+
+        function renderHistoryTable() {
+            const tbody = document.getElementById('dataTableBody');
+            const mobileContainer = document.getElementById('mobileCardsContainer');
+            tbody.innerHTML = '';
+            mobileContainer.innerHTML = '';
+
+            if (records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay registros introducidos todavía.</td></tr>`;
+                mobileContainer.innerHTML = `<div class="p-4 text-center text-gray-500 text-sm bg-gray-900/50 rounded-xl">No hay registros introducidos todavía.</div>`;
+                return;
+            }
+
+            let enrichedRecords = [];
+            let prevTotalChron = null;
+
+            records.forEach((r, originalIndex) => {
+                const total = calculateTotals(r);
+                const incremento = prevTotalChron !== null ? total - prevTotalChron : 0;
+                prevTotalChron = total;
+
+                enrichedRecords.push({
+                    record: r,
+                    originalIndex: originalIndex,
+                    fecha: r.fecha,
+                    total: total,
+                    incremento: incremento
+                });
+            });
+
+            enrichedRecords.sort((a, b) => {
+                let comp = 0;
+                if (sortColumn === 'fecha') {
+                    comp = new Date(a.fecha) - new Date(b.fecha);
+                } else if (sortColumn === 'total') {
+                    comp = a.total - b.total;
+                } else if (sortColumn === 'inc') {
+                    comp = a.incremento - b.incremento;
+                }
+                return sortDirection === 'asc' ? comp : -comp;
+            });
+
+            enrichedRecords.forEach(item => {
+                const r = item.record;
+                const index = item.originalIndex;
+                const total = item.total;
+                const incremento = item.incremento;
+
+                let detalleHtml = '<div class="text-xs space-y-1 text-gray-400">';
+                let detalleMobileHtml = '<div class="grid grid-cols-1 gap-1.5 text-xs text-gray-300 mt-3 pt-3 border-t border-gray-700/70">';
+                
+                if (r.valores) {
+                    subgroups.forEach(sub => {
+                        const val = parseFloat(r.valores[sub.id] || 0);
+                        if (val !== 0) {
+                            const sustractor = isSustractor(sub);
+                            const signo = sustractor ? '- ' : '';
+                            const colorClass = sustractor ? 'text-rose-400' : 'text-emerald-400';
+                            const formattedVal = `${signo}${val.toLocaleString('es-ES', {minimumFractionDigits: 2})} €`;
+                            
+                            detalleHtml += `<div><span class="${colorClass}">${sub.grupo} > ${sub.nombre}:</span> ${formattedVal}</div>`;
+                            detalleMobileHtml += `
+                                <div class="flex justify-between items-center">
+                                    <span class="text-gray-400"><span class="${colorClass} font-medium">${sub.grupo}</span> · ${sub.nombre}</span>
+                                    <span class="font-medium ${sustractor ? 'text-rose-400' : 'text-gray-200'}">${formattedVal}</span>
+                                </div>`;
+                        }
+                    });
+                }
+                detalleHtml += '</div>';
+                detalleMobileHtml += '</div>';
+
+                const incFormatted = incremento !== 0 
+                    ? (incremento > 0 ? '+' : '') + incremento.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €' 
+                    : '-';
+                const incColorClass = incremento >= 0 ? 'text-emerald-400' : 'text-rose-400';
+
+                // Fila Desktop
+                const row = document.createElement('tr');
+                row.className = "hover:bg-gray-750 transition border-b border-gray-700/50";
+                row.innerHTML = `
+                    <td class="p-3 font-medium align-top whitespace-nowrap">${r.fecha}</td>
+                    <td class="p-3 align-top">${detalleHtml}</td>
+                    <td class="p-3 font-bold text-emerald-400 align-top whitespace-nowrap">${total.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</td>
+                    <td class="p-3 align-top whitespace-nowrap ${incColorClass}">${incFormatted}</td>
+                    <td class="p-3 text-right align-top whitespace-nowrap space-x-2">
+                        <button onclick="editRecord(${index})" class="text-amber-400 hover:text-amber-300 text-xs font-semibold px-2.5 py-1.5 bg-amber-900/40 rounded-lg">Editar</button>
+                        <button onclick="deleteRecord(${index})" class="text-rose-400 hover:text-rose-300 text-xs font-semibold px-2.5 py-1.5 bg-rose-900/40 rounded-lg">Eliminar</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+
+                // Tarjeta Móvil
+                const card = document.createElement('div');
+                card.className = "bg-gray-900/80 border border-gray-700 rounded-xl p-4 shadow-sm";
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-semibold text-gray-400 uppercase tracking-wider">📅 ${r.fecha}</span>
+                            <div class="text-xl font-extrabold text-emerald-400 mt-0.5">${total.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-[11px] text-gray-400 block">Variación mensual</span>
+                            <span class="text-xs font-bold ${incColorClass}">${incFormatted}</span>
+                        </div>
+                    </div>
+                    
+                    <details class="group mt-2">
+                        <summary class="text-xs text-blue-400 font-medium cursor-pointer list-none flex items-center gap-1 select-none">
+                            <span class="group-open:rotate-90 transition-transform">▸</span> Ver desglose de cuentas
+                        </summary>
+                        ${detalleMobileHtml}
+                    </details>
+
+                    <div class="flex gap-2 mt-3 pt-3 border-t border-gray-800">
+                        <button onclick="editRecord(${index})" class="flex-1 bg-amber-900/40 hover:bg-amber-900/60 text-amber-400 py-2 rounded-lg text-xs font-semibold transition text-center">
+                            ✏️ Editar mes
+                        </button>
+                        <button onclick="deleteRecord(${index})" class="flex-1 bg-rose-900/40 hover:bg-rose-900/60 text-rose-400 py-2 rounded-lg text-xs font-semibold transition text-center">
+                            🗑️ Eliminar
+                        </button>
+                    </div>
+                `;
+                mobileContainer.appendChild(card);
+            });
+        }
+
         function updateApp() {
             records.sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
             localStorage.setItem('patrimonio_records', JSON.stringify(records));
 
-            // Extraer años disponibles
             const yearsSet = new Set();
             records.forEach(r => {
                 const y = r.fecha.split('-')[0];
@@ -309,60 +622,16 @@
 
             populateYearSelector(years);
 
-            // Filtrar registros según el año seleccionado
             let filteredRecords = records;
             if (selectedYear !== 'TODOS') {
                 filteredRecords = records.filter(r => r.fecha.startsWith(selectedYear));
             }
 
-            // Actualizar etiqueta del gráfico
             const chartYearLabel = document.getElementById('chartYearLabel');
             chartYearLabel.innerText = selectedYear === 'TODOS' ? 'Mostrando todo el histórico' : `Filtrado: Año ${selectedYear}`;
 
-            // Rellenar la Tabla de Historial (Pestaña Datos) siempre con todos los registros
-            const tbody = document.getElementById('dataTableBody');
-            tbody.innerHTML = '';
+            renderHistoryTable();
 
-            let prevTotalTable = null;
-            if (records.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No hay registros introducidos todavía.</td></tr>`;
-            }
-
-            records.forEach((r, index) => {
-                const total = calculateTotals(r);
-                const incremento = prevTotalTable !== null ? total - prevTotalTable : 0;
-                prevTotalTable = total;
-
-                let detalleHtml = '<div class="text-xs space-y-0.5 text-gray-400">';
-                if (r.valores) {
-                    subgroups.forEach(sub => {
-                        const val = parseFloat(r.valores[sub.id] || 0);
-                        if (val !== 0) {
-                            const sustractor = isSustractor(sub);
-                            const signo = sustractor ? '- ' : '';
-                            const colorClass = sustractor ? 'text-rose-400' : 'text-emerald-400';
-                            detalleHtml += `<div><span class="${colorClass}">${sub.grupo} > ${sub.nombre}:</span> ${signo}${val.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</div>`;
-                        }
-                    });
-                }
-                detalleHtml += '</div>';
-
-                const row = document.createElement('tr');
-                row.className = "hover:bg-gray-750 transition border-b border-gray-700/50";
-                row.innerHTML = `
-                    <td class="p-3 font-medium align-top">${r.fecha}</td>
-                    <td class="p-3 align-top">${detalleHtml}</td>
-                    <td class="p-3 font-bold text-emerald-400 align-top">${total.toLocaleString('es-ES', {minimumFractionDigits: 2})} €</td>
-                    <td class="p-3 align-top ${incremento >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${incremento !== 0 ? (incremento > 0 ? '+' : '') + incremento.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €' : '-'}</td>
-                    <td class="p-3 text-right align-top space-x-2">
-                        <button onclick="editRecord(${index})" class="text-amber-400 hover:text-amber-300 text-xs font-semibold px-2 py-1 bg-amber-900/40 rounded-lg">Editar</button>
-                        <button onclick="deleteRecord(${index})" class="text-rose-400 hover:text-rose-300 text-xs font-semibold px-2 py-1 bg-rose-900/40 rounded-lg">Eliminar</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-
-            // Datos para las Tarjetas Resumen y Gráficos filtrados
             let chartLabels = [];
             let chartDataTotales = [];
 
@@ -372,11 +641,9 @@
             });
 
             if (filteredRecords.length > 0) {
-                // Patrimonio Total al cierre del filtro seleccionado
                 const lastRecord = filteredRecords[filteredRecords.length - 1];
                 const lastTotal = calculateTotals(lastRecord);
 
-                // Incremento mensual del último registro visible
                 let prevRecord = null;
                 const lastIndexInAll = records.findIndex(r => r.fecha === lastRecord.fecha);
                 if (lastIndexInAll > 0) {
@@ -385,10 +652,8 @@
 
                 const ultimoInc = prevRecord ? lastTotal - calculateTotals(prevRecord) : 0;
 
-                // Crecimiento Anual dentro del período filtrado
                 let basePatrimonio = 0;
                 if (selectedYear !== 'TODOS') {
-                    // Buscar el cierre del año anterior si existe
                     const targetYearInt = parseInt(selectedYear);
                     const prevYearStr = (targetYearInt - 1).toString();
                     const prevYearRecords = records.filter(r => r.fecha.startsWith(prevYearStr));
@@ -408,7 +673,7 @@
                 
                 const incEl = document.getElementById('ultimoIncremento');
                 incEl.innerText = (ultimoInc > 0 ? '+' : '') + ultimoInc.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
-                incEl.className = `text-3xl font-extrabold mt-1 ${ultimoInc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+                incEl.className = `text-2xl sm:text-3xl font-extrabold mt-1 ${ultimoInc >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
 
                 const anuEl = document.getElementById('crecimientoAnual');
                 anuEl.innerText = (crecimientoAnual > 0 ? '+' : '') + crecimientoAnual.toLocaleString('es-ES', {minimumFractionDigits: 2}) + ' €';
@@ -418,7 +683,6 @@
                 document.getElementById('crecimientoAnual').innerText = '0,00 €';
             }
 
-            // Actualizar ambas gráficas con los registros filtrados
             updateChart(chartLabels, chartDataTotales);
             updateDistribucionChart(filteredRecords);
         }
@@ -446,7 +710,7 @@
                     maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: {
-                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af', maxRotation: 45, minRotation: 0 } },
                         y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9ca3af' } }
                     }
                 }
@@ -527,29 +791,11 @@
                 }
             });
 
-            document.getElementById('formTitle').innerText = `Editando Registro del ${r.fecha}`;
+            document.getElementById('formTitle').innerText = `Editando Registro (${r.fecha})`;
             document.getElementById('submitBtn').innerText = 'Actualizar Registro';
-            document.getElementById('submitBtn').className = 'bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition';
-            document.getElementById('cancelEditBtn').classList.remove('hidden');
+            document.getElementById('submitBtn').className = 'flex-1 bg-amber-600 hover:bg-amber-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition shadow-lg';
 
-            switchTab('datos');
-            document.getElementById('formContainer').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function cancelEdit() {
-            editingIndex = null;
-            document.getElementById('patrimonioForm').reset();
-            document.getElementById('fecha').value = new Date().toISOString().split('T')[0];
-
-            subgroups.forEach(sub => {
-                const input = document.getElementById(`val_${sub.id}`);
-                if (input) input.value = 0;
-            });
-
-            document.getElementById('formTitle').innerText = 'Añadir / Actualizar Registro Mensual';
-            document.getElementById('submitBtn').innerText = 'Guardar Registro Mensual';
-            document.getElementById('submitBtn').className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition';
-            document.getElementById('cancelEditBtn').classList.add('hidden');
+            openRecordModal(true);
         }
 
         function saveRecord(e) {
@@ -574,14 +820,14 @@
                 }
             }
 
-            cancelEdit();
+            closeRecordModal();
             updateApp();
             switchTab('dashboard');
         }
 
         function deleteRecord(index) {
             if (confirm('¿Seguro que deseas eliminar este registro?')) {
-                if (editingIndex === index) cancelEdit();
+                if (editingIndex === index) closeRecordModal();
                 records.splice(index, 1);
                 updateApp();
             }
@@ -610,7 +856,7 @@
                         records = imported.records;
                         localStorage.setItem('patrimonio_subgroups', JSON.stringify(subgroups));
                         renderSubgroupsConfig();
-                        cancelEdit();
+                        closeRecordModal();
                         updateApp();
                         alert('Datos y configuración importados correctamente.');
                     } else {
